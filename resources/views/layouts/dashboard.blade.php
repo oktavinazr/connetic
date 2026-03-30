@@ -1,237 +1,251 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Connetic E-Modul')</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+@extends('layouts.dashboard')
+@section('title', 'Dashboard — Connetic')
+
+@section('styles')
     <style>
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-        :root {
-            --pink-50: #fdf2f8;
-            --pink-100: #fce7f3;
-            --pink-200: #fbcfe8;
-            --pink-300: #f9a8d4;
-            --pink-400: #f472b6;
-            --pink-500: #ec4899;
-            --pink-600: #db2777;
-            --pink-700: #be185d;
-            --bg: #fafbfe;
-            --bg-card: #ffffff;
-            --border: #eef0f6;
-            --text: #111827;
-            --text-muted: #6b7280;
-            --shadow: 0 1px 4px rgba(0,0,0,0.03), 0 4px 20px rgba(0,0,0,0.04);
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 32px;
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
+        .stat-card {
+            padding: 20px;
         }
 
-        /* Navbar */
-        .navbar {
-            position: sticky; top: 0; z-index: 50;
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 40px;
-            height: 60px;
-            background: rgba(255,255,255,0.92);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
-        }
-        .navbar-left { display: flex; align-items: center; gap: 32px; }
-        .navbar-logo {
-            font-size: 17px; font-weight: 800;
-            color: var(--pink-500);
-            text-decoration: none;
-        }
-        .navbar-menu { display: flex; align-items: center; gap: 2px; }
-        .nav-link {
-            padding: 7px 14px;
-            font-size: 13px; font-weight: 500;
+        .stat-label {
+            font-size: 11px;
+            font-weight: 600;
             color: var(--text-muted);
-            text-decoration: none;
-            border-radius: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 26px;
+            font-weight: 800;
+            margin-top: 4px;
+        }
+
+        .stat-value .unit {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        /* Progress */
+        .progress-section {
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .progress-header span {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .progress-header small {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .bar-track {
+            width: 100%;
+            height: 10px;
+            background: var(--pink-50);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--pink-400), var(--pink-600));
+            border-radius: 999px;
+            transition: width 1s ease;
+        }
+
+        /* Pertemuan */
+        .section-label {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+
+        .pertemuan-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .p-card {
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
             transition: all 0.2s;
-        }
-        .nav-link:hover { color: var(--pink-600); background: var(--pink-50); }
-        .nav-link.active { color: var(--pink-600); background: var(--pink-50); font-weight: 600; }
-
-        /* Profile trigger */
-        .profile-wrap { position: relative; }
-        .profile-trigger {
-            display: flex; align-items: center; gap: 10px;
-            padding: 5px 10px 5px 5px;
-            border-radius: 10px;
             cursor: pointer;
-            border: 1px solid transparent;
-            background: none;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.15s;
         }
-        .profile-trigger:hover { background: #f3f4f6; }
-        .profile-trigger.open { background: #f3f4f6; border-color: var(--border); }
 
-        .nav-avatar {
-            width: 32px; height: 32px;
-            border-radius: 8px;
-            background: #e5e7eb;
-            display: flex; align-items: center; justify-content: center;
-            color: #6b7280; font-weight: 700; font-size: 13px;
-            overflow: hidden; flex-shrink: 0;
+        .p-card:hover {
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            transform: translateY(-1px);
         }
-        .nav-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-        .profile-text {
-            display: flex; flex-direction: column; align-items: flex-start;
-            line-height: 1;
-        }
-        .profile-name { font-size: 13px; font-weight: 600; color: var(--text); }
-        .profile-role { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-
-        .profile-chevron {
-            font-size: 10px; color: var(--text-muted);
-            transition: transform 0.2s;
-            margin-left: 2px;
-        }
-        .profile-trigger.open .profile-chevron { transform: rotate(180deg); }
-
-        /* Dropdown */
-        .dropdown {
-            position: absolute; top: calc(100% + 6px); right: 0;
-            width: 180px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
+        .p-num {
+            width: 42px;
+            height: 42px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             border-radius: 10px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-            padding: 4px;
-            display: none;
-            z-index: 100;
-        }
-        .dropdown.open { display: block; }
-
-        .dropdown-item {
-            display: flex; align-items: center; gap: 8px;
-            padding: 9px 12px;
-            font-size: 13px; font-weight: 500;
-            color: var(--text);
-            text-decoration: none;
-            border-radius: 7px;
-            transition: all 0.12s;
-            border: none; background: none; width: 100%;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-        }
-        .dropdown-item:hover { background: #f3f4f6; }
-        .dropdown-item.danger { color: var(--text-muted); }
-        .dropdown-item.danger:hover { background: #fef2f2; color: #dc2626; }
-
-        .dropdown-divider { height: 1px; background: var(--border); margin: 4px 0; }
-
-        /* Container */
-        .container { max-width: 960px; margin: 0 auto; padding: 32px 24px; }
-
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            box-shadow: var(--shadow);
+            font-weight: 800;
+            font-size: 16px;
         }
 
-        .page-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
-        .page-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; }
-
-        /* Toast */
-        .toast {
-            position: fixed; top: 76px; right: 24px;
-            background: #059669; color: #fff;
-            padding: 12px 20px; border-radius: 10px;
-            font-size: 13px; font-weight: 500;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-            z-index: 200;
-            animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.5s forwards;
+        .p-num.done {
+            background: linear-gradient(135deg, var(--pink-500), var(--pink-600));
+            color: #fff;
         }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes fadeOut { to { opacity: 0; transform: translateX(20px); } }
 
-        @media (max-width: 640px) {
-            .navbar { padding: 0 16px; }
-            .navbar-left { gap: 16px; }
-            .profile-text { display: none; }
-            .container { padding: 24px 16px; }
+        .p-num.active {
+            background: var(--pink-100);
+            color: var(--pink-600);
+        }
+
+        .p-num.locked {
+            background: #f3f4f6;
+            color: #b0b5bf;
+        }
+
+        .p-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .p-info h3 {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .p-info p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .p-badge {
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .p-badge.done {
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .p-badge.active {
+            background: var(--pink-50);
+            color: var(--pink-600);
+        }
+
+        .p-badge.locked {
+            background: #f3f4f6;
+            color: #9ca3af;
+        }
+
+        .p-arrow {
+            color: #d1d5db;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 700px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 420px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
-    @yield('styles')
-</head>
-<body>
-    @if(session('success'))
-        <div class="toast">{{ session('success') }}</div>
-    @endif
+@endsection
 
-    <nav class="navbar">
-        <div class="navbar-left">
-            <a href="/" class="navbar-logo">✦ Connetic</a>
-            <div class="navbar-menu">
-                <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
-                <a href="{{ route('pembelajaran') }}" class="nav-link {{ request()->routeIs('pembelajaran') ? 'active' : '' }}">Pembelajaran</a>
-            </div>
+@section('content')
+    <div class="page-title">Dashboard</div>
+    <div class="page-sub">Halo, {{ Auth::user()->profile?->full_name ?? 'User' }}! Pantau progres belajarmu.</div>
+
+    <div class="stats-grid">
+        <div class="card stat-card">
+            <div class="stat-label">Pertemuan Selesai</div>
+            <div class="stat-value">{{ $stats['pertemuan_selesai'] }}</div>
         </div>
-
-        <div class="profile-wrap">
-            <button class="profile-trigger" id="profileTrigger">
-                <div class="nav-avatar">
-                    @if(Auth::user()->getAvatarUrl())
-                        <img src="{{ Auth::user()->getAvatarUrl() }}" alt="">
-                    @else
-                        {{ Auth::user()->getInitial() }}
-                    @endif
-                </div>
-                <div class="profile-text">
-                    <span class="profile-name">{{ Auth::user()->profile?->full_name ?? 'User' }}</span>
-                    <span class="profile-role">{{ Auth::user()->role === 'admin' ? 'Admin' : 'Siswa' }}</span>
-                </div>
-                <span class="profile-chevron">▼</span>
-            </button>
-
-            <div class="dropdown" id="profileDropdown">
-                <a href="{{ route('profile') }}" class="dropdown-item">
-                    👤 Profil Saya
-                </a>
-                <div class="dropdown-divider"></div>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="dropdown-item danger">
-                        🚪 Keluar
-                    </button>
-                </form>
-            </div>
+        <div class="card stat-card">
+            <div class="stat-label">Aktivitas Selesai</div>
+            <div class="stat-value">{{ $stats['aktivitas_selesai'] }}</div>
         </div>
-    </nav>
-
-    <div class="container">
-        @yield('content')
+        <div class="card stat-card">
+            <div class="stat-label">Rata-Rata Nilai</div>
+            <div class="stat-value">{{ $stats['rata_nilai'] }} <span class="unit">/ 100</span></div>
+        </div>
+        <div class="card stat-card">
+            <div class="stat-label">Progress Total</div>
+            <div class="stat-value">{{ $stats['progress_total'] }}<span class="unit">%</span></div>
+        </div>
     </div>
 
-    <script>
-        const trigger = document.getElementById('profileTrigger');
-        const dropdown = document.getElementById('profileDropdown');
+    <div class="card progress-section">
+        <div class="progress-header">
+            <span>Progress Keseluruhan</span>
+            <small>{{ $stats['progress_total'] }}% selesai</small>
+        </div>
+        <div class="bar-track">
+            <div class="bar-fill" style="width: {{ $stats['progress_total'] }}%"></div>
+        </div>
+    </div>
 
-        trigger.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const isOpen = dropdown.classList.toggle('open');
-            trigger.classList.toggle('open', isOpen);
-        });
+    <div class="section-label">Daftar Pertemuan</div>
+    <div class="pertemuan-list">
+        @foreach ($pertemuan as $item)
+            <div class="card p-card" onclick="window.location='{{ route('pertemuan.show', $item['id']) }}'">
+                <div
+                    class="p-num {{ $item['status'] === 'selesai' ? 'done' : ($item['status'] === 'berlangsung' ? 'active' : 'locked') }}">
+                    {{ $item['nomor'] }}
+                </div>
+                <div class="p-info">
+                    <h3>Pertemuan {{ $item['nomor'] }}: {{ $item['judul'] }}</h3>
+                    <p>{{ $item['deskripsi'] }}</p>
+                </div>
+                <div
+                    class="p-badge {{ $item['status'] === 'selesai' ? 'done' : ($item['status'] === 'berlangsung' ? 'active' : 'locked') }}">
+                    @if ($item['status'] === 'selesai')
+                        Selesai
+                    @elseif($item['status'] === 'berlangsung')
+                        {{ $item['selesai'] }}/{{ $item['total'] }}
+                    @else
+                        Belum Mulai
+                    @endif
+                </div>
+                <div class="p-arrow">›</div>
+            </div>
+        @endforeach
 
-        document.addEventListener('click', function(e) {
-            if (!trigger.contains(e.target) && !dropdown.contains(e.target)) {
-                dropdown.classList.remove('open');
-                trigger.classList.remove('open');
-            }
-        });
-    </script>
-</body>
-</html>
+    </div>
+@endsection
